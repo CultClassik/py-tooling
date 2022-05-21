@@ -4,8 +4,10 @@ import sys
 import os
 import shutil
 import yaml
+import string
+import random
 
-chars_to_strip = [ ".", "_", "+", "-", "'" ]
+chars_to_strip = [ ".", "_", "+", "-", "'", "," ]
 
 def cleanup_dirs(path):
   # Create a List    
@@ -53,8 +55,9 @@ def get_matches(folder_name, files_list):
   
   for full_file_name in files_list:
     # strip out the file name since full_file_name is the fq path
-    file_name_strings = full_file_name.split('/')
-    file_name = file_name_strings[len(file_name_strings)-1]
+    # file_name_strings = full_file_name.split('/')
+    # file_name = file_name_strings[len(file_name_strings)-1]
+    file_name = os.path.basename(full_file_name)
     result = inspect_file(folder_strings, file_name)
 
     if result != False:
@@ -118,12 +121,33 @@ def inspect_file(folder_strings, file_name):
   # if no matches are found..
   return False
 
+def random_string_generator():
+  allowed_chars = string.ascii_letters
+  return ''.join(random.choice(allowed_chars) for x in range(6))
+    
 def move_files(target_path, files_list):
   for file_path in files_list:
     file_name_strings = file_path.split("/")
     file_name = file_name_strings[len(file_name_strings)-1]
-    out_text = 'from: ' + file_path +' --- to: '+ target_path
-    file_dest = target_path + "/"+ file_name
+    file_dest = target_path + "/" + file_name
+
+    if os.path.isfile(file_dest):
+      print('File already exists: '+ file_dest)
+      src_file_size = os.path.getsize(file_path)
+      dst_file_size = os.path.getsize(file_dest)
+      if src_file_size == dst_file_size:
+        print('Source and destination files are the same size, removing the source file.')
+        try:
+          os.remove(file_path)
+        except:
+          print('Unable to remove file: ' + file_path)
+      else:
+        print('Source and destination sizes differ, will rename when moving.')
+        file_name_split = os.path.splitext(file_name)
+        file_dest = target_path + "/" + file_name_split[0] + "-" + random_string_generator() + file_name_split[1]
+
+    out_text = 'from: ' + file_path +' --- to: '+ file_dest
+
     # ensure file doesn't already exist
     if not os.path.isfile(file_dest):
       try:
@@ -132,8 +156,6 @@ def move_files(target_path, files_list):
         print ('Unable to move ' + out_text)
       else:
         print ('Moved ' + out_text)
-    else:
-      print('File already exists: '+ file_dest)
 
 if __name__ == '__main__':
     num_args = len(sys.argv)
@@ -173,8 +195,13 @@ if __name__ == '__main__':
     # print total files to be moved
     file_count = 0
     for folder in items:
-      file_count += 1
-    print("----------------------------")
+      print('Folder: ' + folder)
+      for file in items[folder]:
+        print('File: ' + os.path.basename(file))
+        file_count += 1
+      print("----------------------------")
+
+    # print("----------------------------")
     print('Files to be moved:')
     print(file_count)
 
