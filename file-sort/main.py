@@ -95,7 +95,8 @@ def inspect_file(folder_strings, file_name):
   # check the concat of index 1 + 2 first for a more exact match
   if len(folder_strings) > 1:
     first_two_strings = folder_strings[0].casefold() + folder_strings[1].casefold()
-    if first_two_strings in file_name_strings:
+    first_two_with_space = folder_strings[0].casefold() + " " + folder_strings[1].casefold()
+    if first_two_strings in file_name_strings or first_two_with_space in file_name_strings:
       return file_name
 
   # check each item from folder_Strings to see if it exists in file_name / file_name_strings
@@ -104,18 +105,9 @@ def inspect_file(folder_strings, file_name):
     if folder_name_part not in chars_to_strip and folder_name_part in file_name_strings:
       word_matches += 1
       # print('Folder word: ' + item)
-      # print(file_name_strings)
-    
+      # print(file_name_strings)  
 
     if word_matches > 1:
-      # print('Matches found: ' + str(word_matches))
-      # check to see if the first two parts of the folder name appear in the file name
-      # this can help guarantee an exact match
-      # later, we can generate a second dict to hold possible matches that need human review
-      # folder_name_2_words = folder_strings[0] + ' ' + folder_strings[1]
-      # if folder_name_2_words in trimmed_file_name:
-        # return file_name
-        # break
       return file_name
   
   # if no matches are found..
@@ -194,7 +186,7 @@ if __name__ == '__main__':
 
     # print total files to be moved
     file_count = 0
-    for folder in items:
+    for folder in sorted(items):
       print('Folder: ' + folder)
       for file in items[folder]:
         print('File: ' + os.path.basename(file))
